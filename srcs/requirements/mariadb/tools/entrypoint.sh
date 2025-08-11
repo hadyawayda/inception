@@ -19,65 +19,67 @@ fi
 mkdir -p /run/mysqld
 chown -R mysql:mysql /run/mysqld /var/lib/mysql
 
-# --- helper to run SQL over local socket as root (no network) ---
-run_sql() {
-  mysql --protocol=socket --socket=/run/mysqld/mysqld.sock -uroot "$@"
-}
+# If your .cnf uses a file error log, uncomment these:
+# mkdir -p /var/log/mysql
+# chown -R mysql:mysql /var/log/mysql
 
-# --- first-time init: create system tables ---
+# convenience: socket root login
+SQL_SOCK="--protocol=socket --socket=/run/mysqld/mysqld.sock"
+mysql_sock() { mysql $SQL_SOCK -uroot "$@"; }
+
+# Fresh init if system tables are missing (true first boot)
 if [ ! -d /var/lib/mysql/mysql ]; then
   echo "[entrypoint] Initializing system tables..."
-  mariadb-install-db --user=mysql --datadir=/var/lib/mysql --skip-test-db --auth-root-authentication-method=normal
+  mariadb-install-db --user=mysql \
+                     --datadir=/var/lib/mysql \
+                     --skip-test-db \
+                     --auth-root-authentication-method=normal
 fi
 
-# --- start temp server (socket only) ---
+# start temporary server on socket only
 mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking --socket=/run/mysqld/mysqld.sock &
 tmp_pid="$!"
 
-# --- wait for server ready ---
-for i in $(seq 1 30); do
-  if mysqladmin --protocol=socket --socket=/run/mysqld/mysqld.sock ping >/dev/null 2>&1; then
-    break
-  fi
+# wait ready
+for i in $(seq 1 40); do
+  if mysqladmin $SQL_SOCK ping >/dev/null 2>&1; then break; fi
   sleep 1
 done
 
-# --- secure root + baseline hygiene ---
-cat >/tmp/bootstrap.sql <<SQL
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MARIADB_ROOT_PASSWORD}';
--- (optional hardening)
-DELETE FROM mysql.user WHERE User='' OR (User='root' AND Host NOT IN ('localhost'));
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-SQL
-run_sql < /tmp/bootstrap.sql
-rm -f /tmp/bootstrap.sql
+# sanity check: ensure mysql.user exists; if not, bail with a helpful msg
+if ! mysql_sock -e "SELECT 1 FROM mysql.user LIMIT 1;" >/dev/null 2>&1; then
+  echo >&2 "[entrypoint] CRITICAL: mysql system tables are missing/corrupted in /var/lib/mysql."
+  echo >&2 "           Remove the contents of your bind path and re-run to initialize cleanly."
+  echo >&2 "           Current datadir: /var/lib/mysql (host: ${HOST_DATA_DIR:-unknown}/mariadb)"
+  kill "$tmp_pid" 2>/dev/null || true
+  wait "$tmp_pid" 2>/dev/null || true
+  exit 1
+fi
 
-# --- ensure app database + db user (no WP tables here) ---
-cat >/tmp/app.sql <<SQL
+# secure root + create app db/user (idempotent)
+mysql_sock <<SQL
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${MARIADB_ROOT_PASSWORD}';
 CREATE DATABASE IF NOT EXISTS \`${MARIADB_DATABASE}\`
   CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE USER IF NOT EXISTS '${MARIADB_USER}'@'%' IDENTIFIED BY '${MARIADB_PASSWORD}';
 GRANT ALL PRIVILEGES ON \`${MARIADB_DATABASE}\`.* TO '${MARIADB_USER}'@'%';
 FLUSH PRIVILEGES;
 SQL
-run_sql -p"${MARIADB_ROOT_PASSWORD}" < /tmp/app.sql
-rm -f /tmp/app.sql
 
-# --- optional: import any seed SQL dropped into this dir (kept for later steps) ---
+# optional seeds in /docker-entrypoint-initdb.d
 if [ -d /docker-entrypoint-initdb.d ]; then
   for f in /docker-entrypoint-initdb.d/*; do
     case "$f" in
-      *.sql)     echo "[entrypoint] applying $f"; run_sql -p"${MARIADB_ROOT_PASSWORD}" < "$f" ;;
-      *.sql.gz)  echo "[entrypoint] applying $f"; gunzip -c "$f" | run_sql -p"${MARIADB_ROOT_PASSWORD}" ;;
-      *.sh)      echo "[entrypoint] running $f"; sh "$f" ;;
-      *)         ;;
+      *.sql)    echo "[entrypoint] applying $f"; mysql_sock -p"${MARIADB_ROOT_PASSWORD}" < "$f" ;;
+      *.sql.gz) echo "[entrypoint] applying $f"; gunzip -c "$f" | mysql_sock -p"${MARIADB_ROOT_PASSWORD}" ;;
+      *.sh)     echo "[entrypoint] running  $f"; sh "$f" ;;
+      *)        ;;
     esac
   done
 fi
 
-# --- stop temp server cleanly, then relaunch with networking ---
-if ! mysqladmin --protocol=socket --socket=/run/mysqld/mysqld.sock -uroot -p"${MARIADB_ROOT_PASSWORD}" shutdown; then
+# stop temp server and relaunch with networking
+if ! mysqladmin $SQL_SOCK -uroot -p"${MARIADB_ROOT_PASSWORD}" shutdown; then
   kill "$tmp_pid" 2>/dev/null || true
   wait "$tmp_pid" 2>/dev/null || true
 fi
