@@ -1,0 +1,4 @@
+conf/*
+tools/*
+!conf/50-server.cnf
+!tools/entrypoint.sh

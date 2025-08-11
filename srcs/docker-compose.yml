@@ -1,0 +1,65 @@
+version: "3.9"
+
+name: inception
+
+services:
+  mariadb:
+    image: inception-mariadb:1.0
+    build:
+      context: ./requirements/mariadb
+    container_name: mariadb
+    restart: always
+    env_file: ./.env
+    secrets:
+      - db_root_password
+      - db_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - inception
+    expose:
+      - "3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin --protocol=socket --socket=/run/mysqld/mysqld.sock -uroot -p$$(cat /run/secrets/db_root_password) ping || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # placeholders for next steps (buildx will ignore if no build context referenced)
+  wordpress:
+    image: inception-wordpress:1.0
+    build:
+      context: ./requirements/wordpress
+    profiles: ["later"]
+    networks: [inception]
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  nginx:
+    image: inception-nginx:1.0
+    build:
+      context: ./requirements/nginx
+    profiles: ["later"]
+    networks: [inception]
+    depends_on:
+      wordpress:
+        condition: service_started
+
+volumes:
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOST_DATA_DIR}/mariadb
+
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  db_password:
+    file: ../secrets/db_password.txt
+
+networks:
+  inception:
+    driver: bridge
