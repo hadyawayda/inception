@@ -1,17 +1,10 @@
 [mysqld]
-user = mysql
-datadir = /var/lib/mysql
-socket = /run/mysqld/mysqld.sock
-pid-file = /run/mysqld/mysqld.pid
+# Configure server as per your requirements
 bind-address = 0.0.0.0
-
-# container-friendly logging
-log_error = /proc/self/fd/2
-
-
-# niceties
-skip-name-resolve
+user = mysql
 skip-host-cache
+skip-name-resolve
+sql_mode = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
 
-# WSL quirks (optional: quiet the io_uring noise)
-innodb_use_native_aio = OFF
+# Other basic settings (if necessary)
+innodb_buffer_pool_size = 128M
