@@ -9,7 +9,12 @@ COMPOSE_FILE := srcs/docker-compose.yml
 ENV_FILE     := srcs/.env
 COMPOSE      := docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 
-PLATFORM ?=   # optional: linux/amd64 or linux/arm64 (compose will pass through)
+# Buildx: always use the built-in local BuildKit (builder "default")
+BUILDX   := docker buildx
+BUILDER  := default
+BUILDX_B := $(BUILDX) --builder $(BUILDER)
+
+PLATFORM ?=   # optional: linux/amd64 or linux/arm64
 
 # Fully expand HOST_DATA_DIR from srcs/.env (resolves ${LOGIN}/${HOME}, strips CRLF)
 EFFECTIVE_DATA_DIR := $(shell bash -lc '\
@@ -21,11 +26,14 @@ EFFECTIVE_DATA_DIR := $(shell bash -lc '\
   printf "%s" "$$p" \
 ')
 
+# Absolute build context for mariadb (prevents bake path confusion)
+MARIADB_CTX := $(CURDIR)/srcs/requirements/mariadb
+
 # ---- phony targets --------------------------------------------------------
 .PHONY: all preflight ensure-envfile ensure-secrets ensure-data-dir \
-        build build-all up down clean fclean re nuke doctor
+        builder build build-all up down clean fclean re nuke doctor
 
-all: preflight ensure-envfile ensure-secrets ensure-data-dir build up
+all: preflight ensure-envfile ensure-secrets ensure-data-dir builder build up
 
 # Ensure docker is available
 preflight:
@@ -55,15 +63,20 @@ ensure-data-dir: ensure-envfile
 	}
 	@echo "Using data dir: $(EFFECTIVE_DATA_DIR)"
 
-# ---- build / run ----------------------------------------------------------
-# Build only MariaDB image using default builder
-build:
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) build mariadb
+# ---- Buildx: use the built-in 'default' (local BuildKit), never create/ls ---
+builder:
+	@$(BUILDX) --builder $(BUILDER) inspect --bootstrap >/dev/null 2>&1 || true
 
-# (When wordpress/nginx exist) build everything
-build-all:
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) build
+# Build only MariaDB via bake (load into local Docker for compose to use)
+build: builder
+	cd srcs && \
+	CTX="$$PWD/requirements/mariadb" && \
+	docker buildx --builder $(BUILDER) bake --allow=fs.read=.. -f docker-compose.yml \
+		--load \
+		--set mariadb.context="$$CTX" \
+		mariadb
 
+# ---- run -------------------------------------------------------------------
 up:
 	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d mariadb
 
@@ -72,6 +85,7 @@ down:
 
 # ---- cleanup --------------------------------------------------------------
 clean: down
+	@- $(BUILDX_B) prune -af 2>/dev/null || true
 	@- docker builder prune -af 2>/dev/null || true
 	@- docker system prune -af --volumes
 
@@ -97,3 +111,4 @@ doctor:
 	@echo "== containers ==" && docker ps -a || true
 	@echo "== volumes ==" && docker volume ls || true
 	@echo "== networks (custom) ==" && docker network ls --filter type=custom || true
+	@echo "== buildx builders ==" && $(BUILDX) --builder $(BUILDER) inspect || true
