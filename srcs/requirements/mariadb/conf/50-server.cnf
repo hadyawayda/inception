@@ -1,13 +1,12 @@
 [server]
+
 [mysqld]
 user = mysql
 datadir = /var/lib/mysql
 bind-address = 0.0.0.0
 skip-name-resolve
 
-# Charset
 character-set-server = utf8mb4
 collation-server     = utf8mb4_general_ci
 
-# Logging (simple)
 log_error = /var/log/mysql/error.log

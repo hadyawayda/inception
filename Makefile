@@ -1,36 +1,99 @@
-COMPOSE := docker compose -f srcs/docker-compose.yml
-BUILDX  := docker buildx
-BUILDER := inception-builder
-# Optionally set: make PLATFORM=linux/amd64  (or linux/arm64)
-PLATFORM ?=
+# ---- config ---------------------------------------------------------------
+SHELL := /bin/bash
+.DEFAULT_GOAL := all
 
-.PHONY: all builder build up down clean fclean re
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
 
-all: builder build up
+COMPOSE_FILE := srcs/docker-compose.yml
+ENV_FILE     := srcs/.env
+COMPOSE      := docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 
-builder:
-	@$(BUILDX) ls | grep -q '^$(BUILDER)\b' || $(BUILDX) create --name $(BUILDER) --driver docker-container
-	@$(BUILDX) use $(BUILDER)
-	@$(BUILDX) inspect --bootstrap >/dev/null
+PLATFORM ?=   # optional: linux/amd64 or linux/arm64 (compose will pass through)
 
-build: builder
-ifneq ($(PLATFORM),)
-	$(BUILDX) bake -f srcs/docker-compose.yml --load --set *.platform=$(PLATFORM)
-else
-	$(BUILDX) bake -f srcs/docker-compose.yml --load
-endif
+# Fully expand HOST_DATA_DIR from srcs/.env (resolves ${LOGIN}/${HOME}, strips CRLF)
+EFFECTIVE_DATA_DIR := $(shell bash -lc '\
+  set -a; . <(sed "s/\r$$//" srcs/.env); set +a; \
+  p="$${HOST_DATA_DIR}"; \
+  p="$$(printf "%s" "$$p" | tr -d "\r")"; \
+  eval "p=$$p"; \
+  [ -n "$$p" ] || p="$$HOME/data"; \
+  printf "%s" "$$p" \
+')
+
+# ---- phony targets --------------------------------------------------------
+.PHONY: all preflight ensure-envfile ensure-secrets ensure-data-dir \
+        build build-all up down clean fclean re nuke doctor
+
+all: preflight ensure-envfile ensure-secrets ensure-data-dir build up
+
+# Ensure docker is available
+preflight:
+	@command -v docker >/dev/null || { echo "ERROR: docker not found"; exit 1; }
+	@docker version >/dev/null
+
+# Require srcs/.env to exist (do NOT create it)
+ensure-envfile:
+	@[ -f $(ENV_FILE) ] || { \
+		echo "ERROR: $(ENV_FILE) is missing. Create it and set HOST_DATA_DIR, etc."; \
+		exit 1; \
+	}
+
+# Secrets (create if missing)
+ensure-secrets:
+	@mkdir -p secrets
+	@[ -f secrets/db_root_password.txt ] || (umask 077; echo "change-me-strong-root-pass" > secrets/db_root_password.txt)
+	@[ -f secrets/db_password.txt ]      || (umask 077; echo "change-me-strong-wp-pass"   > secrets/db_password.txt)
+
+# Create data dir (from HOST_DATA_DIR in srcs/.env)
+ensure-data-dir: ensure-envfile
+	@dir='$(EFFECTIVE_DATA_DIR)'; \
+	mkdir -p "$$dir/mariadb" 2>/dev/null || { \
+	  echo "ERROR: cannot create $$dir/mariadb (permission denied)."; \
+	  echo "       Fix HOST_DATA_DIR in $(ENV_FILE) or pick a writable path."; \
+	  exit 1; \
+	}
+	@echo "Using data dir: $(EFFECTIVE_DATA_DIR)"
+
+# ---- build / run ----------------------------------------------------------
+# Build only MariaDB image using default builder
+build:
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) build mariadb
+
+# (When wordpress/nginx exist) build everything
+build-all:
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) build
 
 up:
-	$(COMPOSE) up -d
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d mariadb
 
 down:
-	$(COMPOSE) down
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down -v --remove-orphans
 
+# ---- cleanup --------------------------------------------------------------
 clean: down
-	docker system prune -f
+	@- docker builder prune -af 2>/dev/null || true
+	@- docker system prune -af --volumes
 
-fclean: down
-	- docker volume rm $$(docker volume ls -q | grep -E '^inception_') 2>/dev/null || true
-	- docker image rm inception-mariadb:1.0 2>/dev/null || true
+fclean: clean
+	@- docker volume rm $$(docker volume ls -q | grep -E '^inception_') 2>/dev/null || true
+	@- docker image rm inception-mariadb:1.0 2>/dev/null || true
 
 re: down all
+
+nuke:
+	@echo ">>> NUKING docker environment (destructive)"
+	@- HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down -v --remove-orphans 2>/dev/null || true
+	@- docker ps -aq | xargs -r docker rm -f
+	@- docker images -aq | xargs -r docker rmi -f
+	@- docker volume ls -q | xargs -r docker volume rm -f
+	@- docker network ls --filter type=custom -q | xargs -r docker network rm
+	@- docker system prune -af --volumes
+	@- rm -rf '$(EFFECTIVE_DATA_DIR)/mariadb' 2>/dev/null || true
+
+doctor:
+	@echo "== docker system df ==" && docker system df || true
+	@echo "== images ==" && docker images || true
+	@echo "== containers ==" && docker ps -a || true
+	@echo "== volumes ==" && docker volume ls || true
+	@echo "== networks (custom) ==" && docker network ls --filter type=custom || true

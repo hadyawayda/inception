@@ -2,3 +2,9 @@ conf/*
 tools/*
 !conf/50-server.cnf
 !tools/entrypoint.sh
+# Keep build context clean
+*.swp
+*.swo
+*.tmp
+.git
+.gitignore
