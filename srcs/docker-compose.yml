@@ -23,7 +23,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # placeholders for next steps (buildx will ignore if no build context referenced)
   wordpress:
     image: inception-wordpress:1.0
     build:

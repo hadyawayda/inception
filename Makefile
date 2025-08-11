@@ -12,7 +12,17 @@ COMPOSE			:= docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 # Buildx: always use the built-in local BuildKit (builder "default")
 BUILDX_B		:= docker buildx build --builder default
 
-all: clean builder build up
+# Resolve the effective data directory from the .env file
+EFFECTIVE_DATA_DIR := $(shell bash -lc '\
+  set -a; . <(sed "s/\r$$//" srcs/.env); set +a; \
+  p="$${HOST_DATA_DIR}"; \
+  p="$$(printf "%s" "$$p" | tr -d "\r")"; \
+  eval "p=$$p"; \
+  [ -n "$$p" ] || p="$$HOME/data"; \
+  printf "%s" "$$p" \
+')
+
+all: builder build up
 
 # ---- Buildx: use the built-in 'default' (local BuildKit), never create/ls ---
 builder:
@@ -29,10 +39,10 @@ build: builder
 
 # ---- run -------------------------------------------------------------------
 up:
-	@$(COMPOSE) up -d mariadb
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d mariadb
 
 down:
-	@$(COMPOSE) down --remove-orphans
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down --remove-orphans
 
 # ---- cleanup --------------------------------------------------------------
 clean: down
@@ -46,7 +56,6 @@ clean: down
 fclean: clean
 	@docker volume rm -f srcs_mariadb_data || true
 
-re: down all
+re: clean all
 
-.PHONY: all  \
-        builder build build-all up down clean fclean re
+.PHONY: all builder build build-all up down clean fclean re

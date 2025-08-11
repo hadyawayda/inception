@@ -24,4 +24,5 @@ EXPOSE 3306
 
 # Use tini to handle PID 1 and run the entrypoint script
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
+
 CMD ["mysqld"]
