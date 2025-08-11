@@ -81,6 +81,9 @@ down:
 
 # ---- cleanup --------------------------------------------------------------
 clean: down
+	@echo "Stopping all running containers..."
+	@docker stop $(docker ps -q) 2>/dev/null || true
+	@echo "Pruning unused Docker resources..."
 	@- $(BUILDX_B) prune -af 2>/dev/null || true
 	@- docker builder prune -af 2>/dev/null || true
 	@- docker system prune -af 2>/dev/null || true

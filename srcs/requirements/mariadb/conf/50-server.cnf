@@ -1,16 +1,17 @@
 [mysqld]
 user = mysql
 datadir = /var/lib/mysql
-#socket = /run/mysqld/mysqld.sock
+socket = /run/mysqld/mysqld.sock
 pid-file = /run/mysqld/mysqld.pid
 bind-address = 0.0.0.0
 
 # container-friendly logging
-#log_error = /proc/self/fd/2
+log_error = /proc/self/fd/2
+
 
 # niceties
 skip-name-resolve
 skip-host-cache
 
 # WSL quirks (optional: quiet the io_uring noise)
-#innodb_use_native_aio = OFF
+innodb_use_native_aio = OFF
