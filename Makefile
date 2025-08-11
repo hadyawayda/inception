@@ -29,11 +29,7 @@ EFFECTIVE_DATA_DIR := $(shell bash -lc '\
 # Absolute build context for mariadb (prevents bake path confusion)
 MARIADB_CTX := $(CURDIR)/srcs/requirements/mariadb
 
-# ---- phony targets --------------------------------------------------------
-.PHONY: all preflight ensure-envfile ensure-secrets ensure-data-dir \
-        builder build build-all up down clean fclean re nuke doctor
-
-all: preflight ensure-envfile ensure-secrets ensure-data-dir builder build up
+all: clean preflight ensure-envfile ensure-secrets ensure-data-dir builder build up
 
 # Ensure docker is available
 preflight:
@@ -69,7 +65,7 @@ builder:
 
 # Build only MariaDB via bake (load into local Docker for compose to use)
 build: builder
-	cd srcs && \
+	@cd srcs && \
 	CTX="$$PWD/requirements/mariadb" && \
 	docker buildx --builder $(BUILDER) bake --allow=fs.read=.. -f docker-compose.yml \
 		--load \
@@ -81,34 +77,18 @@ up:
 	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d mariadb
 
 down:
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down -v --remove-orphans
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down --remove-orphans
 
 # ---- cleanup --------------------------------------------------------------
 clean: down
 	@- $(BUILDX_B) prune -af 2>/dev/null || true
 	@- docker builder prune -af 2>/dev/null || true
-	@- docker system prune -af --volumes
+	@- docker system prune -af 2>/dev/null || true
 
 fclean: clean
-	@- docker volume rm $$(docker volume ls -q | grep -E '^inception_') 2>/dev/null || true
 	@- docker image rm inception-mariadb:1.0 2>/dev/null || true
 
 re: down all
 
-nuke:
-	@echo ">>> NUKING docker environment (destructive)"
-	@- HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down -v --remove-orphans 2>/dev/null || true
-	@- docker ps -aq | xargs -r docker rm -f
-	@- docker images -aq | xargs -r docker rmi -f
-	@- docker volume ls -q | xargs -r docker volume rm -f
-	@- docker network ls --filter type=custom -q | xargs -r docker network rm
-	@- docker system prune -af --volumes
-	@- rm -rf '$(EFFECTIVE_DATA_DIR)/mariadb' 2>/dev/null || true
-
-doctor:
-	@echo "== docker system df ==" && docker system df || true
-	@echo "== images ==" && docker images || true
-	@echo "== containers ==" && docker ps -a || true
-	@echo "== volumes ==" && docker volume ls || true
-	@echo "== networks (custom) ==" && docker network ls --filter type=custom || true
-	@echo "== buildx builders ==" && $(BUILDX) --builder $(BUILDER) inspect || true
+.PHONY: all preflight ensure-envfile ensure-secrets ensure-data-dir \
+        builder build build-all up down clean fclean re
