@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if MariaDB has been initialized
-if [ ! -d /var/lib/mysql/mysql ]; then
+if [ ! -d /var/lib/mariadb/mysql ]; then
     echo "Initializing MariaDB database..."
     mysqld --initialize-insecure
     mysqld &

@@ -31,18 +31,18 @@ services:
     #   retries: 5
     #   start_period: 10s
 
-  wordpress:
-    build:
-      context: ./requirements/wordpress
-    container_name: wordpress
-    restart: on-failure
-    env_file: ./.env
-    depends_on:
-      - mariadb
-    volumes:
-      - wp_data:/var/www/html
-    networks: 
-      - inception
+  # wordpress:
+  #   build:
+  #     context: ./requirements/wordpress
+  #   container_name: wordpress
+  #   restart: on-failure
+  #   env_file: ./.env
+  #   depends_on:
+  #     - mariadb
+  #   volumes:
+  #     - wp_data:/var/www/html
+  #   networks: 
+  #     - inception
 
 secrets:
   db_root_password:
