@@ -17,7 +17,9 @@ COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
 # Make sure the entrypoint script is executable
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
     mkdir -p /var/lib/mariadb /run/mysqld && \
-    chown -R mysql:mysql /var/lib/mariadb /run/mysqld
+    chown -R mysql:mysql /var/lib/mariadb /run/mysqld && \
+    chmod 0644 /etc/mysql/mariadb.conf.d/50-server.cnf && \
+    chown root:root /etc/mysql/mariadb.conf.d/50-server.cnf
 
 # Expose MariaDB default port
 EXPOSE 3306
