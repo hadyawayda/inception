@@ -2,7 +2,6 @@ name: inception
 
 services:
   mariadb:
-    image: mariadb
     build: 
       context: ./requirements/mariadb
     container_name: mariadb
@@ -13,9 +12,20 @@ services:
       - db_password
     volumes:
       - mariadb_data:/var/lib/mariadb
-    ports:
-      - "3306:3306"
     networks:
+      - inception
+
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+    container_name: wordpress
+    restart: on-failure
+    env_file: ./.env
+    depends_on:
+      - mariadb
+    volumes:
+      - wp_data:/var/www/html
+    networks: 
       - inception
 
 secrets:
@@ -31,6 +41,12 @@ volumes:
       type: none
       o: bind
       device: ${HOST_DATA_DIR}/mariadb
+  wp_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOST_DATA_DIR}/wordpress
 
 networks:
   inception:
