@@ -7,6 +7,7 @@ export COMPOSE_DOCKER_CLI_BUILD = 1
 
 COMPOSE_FILE	:= srcs/docker-compose.yml
 ENV_FILE		:= srcs/.env
+COMPOSE			:= docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 
 # Resolve the effective data directory from the .env file
 EFFECTIVE_DATA_DIR := $(shell bash -lc '\
@@ -22,10 +23,10 @@ all: up
 
 # ---- run -------------------------------------------------------------------
 up:
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up --build -d
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d --build
 
 down:
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) down --remove-orphans
+	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down --remove-orphans
 
 # ---- cleanup --------------------------------------------------------------
 clean: down

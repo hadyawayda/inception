@@ -12,7 +12,7 @@ services:
       - db_root_password
       - db_password
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mariadb_data:/var/lib/mariadb
     ports:
       - "3306:3306"
     networks:
@@ -26,6 +26,11 @@ secrets:
 
 volumes:
   mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOST_DATA_DIR}/mariadb
 
 networks:
   inception:
