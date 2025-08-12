@@ -23,8 +23,8 @@ all: up
 
 # ---- run -------------------------------------------------------------------
 up:
-	@mkdir -p /home/hawayda/data/mariadb
-	@mkdir -p /home/hawayda/data/wordpress
+	@mkdir -p /sgoinfre/hawayda/data/mariadb
+	@mkdir -p /sgoinfre/hawayda/data/wordpress
 	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d --build
 
 down:
@@ -39,6 +39,7 @@ clean: down
 
 fclean: clean
 	@docker volume rm -f inception_mariadb_data || true
+	@docker volume rm -f inception_wp_data || true
 
 re: clean all
 
