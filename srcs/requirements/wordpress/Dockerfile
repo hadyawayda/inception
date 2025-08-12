@@ -18,10 +18,10 @@ RUN sed -ri 's|^listen\s*=\s*.*|listen = 0.0.0.0:9000|' $PHP_FPM_POOL && \
     sed -ri 's|^;?clear_env\s*=\s*no|clear_env = no|' $PHP_FPM_POOL
 
 # Entrypoint
-COPY tools/entrypoint.sh /usr/local/bin/wp-entrypoint
-RUN chmod +x /usr/local/bin/wp-entrypoint
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR ${WP_PATH}
 EXPOSE 9000
-ENTRYPOINT ["/usr/local/bin/wp-entrypoint"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm8.2", "-F"]

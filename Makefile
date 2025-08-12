@@ -23,8 +23,8 @@ all: up
 
 # ---- run -------------------------------------------------------------------
 up:
-	@mkdir -p /sgoinfre/hawayda/data/mariadb
-	@mkdir -p /sgoinfre/hawayda/data/wordpress
+	@mkdir -p $(EFFECTIVE_DATA_DIR)/mariadb
+	@mkdir -p $(EFFECTIVE_DATA_DIR)/wordpress
 	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d --build
 
 down:
