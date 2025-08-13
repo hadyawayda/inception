@@ -30,6 +30,14 @@ up:
 down:
 	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down --remove-orphans
 
+update-mariadb:
+	@$(COMPOSE) build mariadb
+	@$(COMPOSE) up -d mariadb
+
+update-wordpress:
+	@$(COMPOSE) build wordpress
+	@$(COMPOSE) up -d wordpress
+	
 # ---- cleanup --------------------------------------------------------------
 clean: down
 	@echo "Stopping all running containers..."

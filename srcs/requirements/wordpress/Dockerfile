@@ -24,4 +24,4 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 WORKDIR ${WP_PATH}
 EXPOSE 9000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["php-fpm8.2", "-F"]
+CMD ["php-fpm", "-F"]
