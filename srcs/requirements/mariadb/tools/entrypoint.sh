@@ -1,12 +1,24 @@
 #!/bin/bash
 
-service mysql start
+# Check if MariaDB has been initialized
+if [ ! -d /var/lib/mariadb/mysql ]; then
+    echo "Initializing MariaDB database..."
+    mysqld --initialize-insecure
+    mysqld &
+    sleep 10
 
-mysql -e "CREATE DATABASE IF NOT EXISTS wordpress;"
-mysql -e "CREATE USER 'hady'@'%' IDENTIFIED BY 'hawayda';"
-mysql -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'hady'@'%';"
-mysql -uroot -p hawayda -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'hawayda';"
-mysql -e "FLUSH PRIVILEGES;"
-mysqladmin -uroot -p hawayda shutdown
+    # Set root password
+    if [ -f "$MARIADB_ROOT_PASSWORD_FILE" ]; then
+        mysql -e "SET PASSWORD FOR 'root'@'%' = PASSWORD('$(cat $MARIADB_ROOT_PASSWORD_FILE)');"
+        mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';"
+        mysql -e "FLUSH PRIVILEGES;"
+    else
+        echo "Root password not set, skipping root password configuration"
+    fi
 
-exec "$@"
+    mysqladmin -u root -p$(cat $MARIADB_ROOT_PASSWORD_FILE) shutdown
+    sleep 5
+fi
+
+# Run MariaDB
+exec mysqld

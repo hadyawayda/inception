@@ -6,7 +6,7 @@ export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
 COMPOSE_FILE	:= srcs/docker-compose.yml
-ENV_FILE		:= srcs/.env.aws
+ENV_FILE		:= srcs/.env.wsl
 COMPOSE			:= docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 
 # Resolve the effective data directory from the .env.wsl file
