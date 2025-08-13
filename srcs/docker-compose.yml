@@ -15,11 +15,11 @@ services:
     networks:
       - inception
     healthcheck:
-      test: ["CMD", "bash", "/healthcheck.sh"]
-      interval: 3s
+      test: ["CMD", "bash", "/usr/local/bin/healthcheck.sh"]
+      interval: 5s
       timeout: 3s
-      retries: 10
-      start_period: 5s
+      retries: 5
+      start_period: 10s
 
   # wordpress:
   #   build:
