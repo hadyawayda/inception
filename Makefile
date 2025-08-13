@@ -11,7 +11,7 @@ COMPOSE			:= docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 
 # Resolve the effective data directory from the .env.wsl file
 EFFECTIVE_DATA_DIR := $(shell bash -lc '\
-  set -a; . <(sed "s/\r$$//" srcs/.env.aws); set +a; \
+  set -a; . <(sed "s/\r$$//" srcs/.env.wsl); set +a; \
   p="$${HOST_DATA_DIR}"; \
   p="$$(printf "%s" "$$p" | tr -d "\r")"; \
   eval "p=$$p"; \
