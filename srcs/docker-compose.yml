@@ -6,7 +6,7 @@ services:
       context: ./requirements/mariadb
     container_name: mariadb
     restart: on-failure
-    env_file: ./.env
+    env_file: ./.env.wsl
     secrets:
       - db_root_password
       - db_password

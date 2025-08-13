@@ -6,12 +6,12 @@ export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
 COMPOSE_FILE	:= srcs/docker-compose.yml
-ENV_FILE		:= srcs/.env
+ENV_FILE		:= srcs/.env.wsl
 COMPOSE			:= docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
 
-# Resolve the effective data directory from the .env file
+# Resolve the effective data directory from the .env.wsl file
 EFFECTIVE_DATA_DIR := $(shell bash -lc '\
-  set -a; . <(sed "s/\r$$//" srcs/.env); set +a; \
+  set -a; . <(sed "s/\r$$//" srcs/.env.wsl); set +a; \
   p="$${HOST_DATA_DIR}"; \
   p="$$(printf "%s" "$$p" | tr -d "\r")"; \
   eval "p=$$p"; \
