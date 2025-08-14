@@ -7,7 +7,7 @@ export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
 # ---- paths ------------------------------------------------------------------
-COMPOSE			:= docker compose -f srcs/docker-compose.yml
+COMPOSE			:= docker compose -f srcs/docker-compose.yml --progress=tty
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 
 # ---- targets ---------------------------------------------------------------
@@ -15,7 +15,8 @@ all: up
 
 # ---- run -------------------------------------------------------------------
 up:
-	@mkdir -p ${HOME}/data/mariadb ${HOME}/data/wordpress
+	@mkdir -p /home/${USER}/data/mariadb
+	@mkdir -p /home/${USER}/data/wordpress
 	@$(COMPOSE) up -d --build
 
 down:
