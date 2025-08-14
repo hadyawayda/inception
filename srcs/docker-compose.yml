@@ -47,6 +47,7 @@ services:
     build:
       context: ./requirements/nginx
     container_name: nginx
+    env_file: ./requirements/nginx/.env
     restart: on-failure
     depends_on:
       wordpress:
@@ -63,7 +64,6 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
-
 
 secrets:
   db_root_password:

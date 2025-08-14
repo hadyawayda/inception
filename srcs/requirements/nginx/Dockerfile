@@ -1,7 +1,6 @@
 FROM debian:trixie
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DOMAIN_NAME=login.42.fr
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       nginx openssl ca-certificates curl \

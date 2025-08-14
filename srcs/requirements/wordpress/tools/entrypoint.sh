@@ -27,6 +27,15 @@ DB_PASS="$(read_secret "$DB_PASSWORD_FILE" "${MARIADB_PASSWORD:-}")"
 [ -z "$DB_PASS" ] && echo "⚠ Database password is empty"
 [ -z "$WP_ADMIN_PASSWORD" ] && echo "⚠ Admin password is empty"
 
+if [ -z "${DOMAIN_NAME:-}" ] && [ -n "${LOGIN:-}" ]; then
+  DOMAIN_NAME="${LOGIN}.42.fr"
+fi
+
+if echo "$WP_ADMIN_USER" | grep -Ei '(^|.*)(admin|administrator)(.*|$)' >/dev/null; then
+  echo "❌ WP_ADMIN_USER ('${WP_ADMIN_USER}') must not contain 'admin'/'administrator'." >&2
+  exit 1
+fi
+
 # --- resolve php-fpm binary (8.4 included) -----------------------------------
 FPM_BIN=""
 for cand in \
