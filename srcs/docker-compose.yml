@@ -36,6 +36,12 @@ services:
       - wp_data:/var/www/html
     networks: 
       - inception
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
 secrets:
   db_root_password:
