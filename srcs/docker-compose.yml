@@ -42,6 +42,28 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+      
+  nginx:
+    build:
+      context: ./requirements/nginx
+    container_name: nginx
+    restart: on-failure
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    ports:
+      - "443:443"
+    volumes:
+      - wp_data:/var/www/html:ro
+    networks:
+      - inception
+    healthcheck:
+      test: ["CMD-SHELL", "curl -kfsS -H 'Host: ${DOMAIN_NAME:-login.42.fr}' https://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
 
 secrets:
   db_root_password:

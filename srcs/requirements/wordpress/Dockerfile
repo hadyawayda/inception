@@ -15,6 +15,8 @@ RUN set -eux; ln -sf "$(command -v php-fpm8.4)" /usr/local/sbin/php-fpm
 # Entrypoint + healthcheck
 COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY tools/healthcheck.sh /usr/local/bin/healthcheck.sh
+COPY conf/zz-docker.conf /etc/php/8.4/fpm/pool.d/zz-docker.conf
+
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh
 
 WORKDIR ${WP_PATH}

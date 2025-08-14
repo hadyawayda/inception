@@ -38,6 +38,14 @@ wordpress:
 	@$(COMPOSE) build --no-cache wordpress
 	@$(COMPOSE) up -d wordpress
 
+nginx:
+	@docker stop nginx 2>/dev/null || true
+	@docker rm -f nginx 2>/dev/null || true
+	@docker rmi -f nginx 2>/dev/null || true
+	@docker builder prune -af 2>/dev/null || true
+	@$(COMPOSE) build --no-cache nginx
+	@$(COMPOSE) up -d nginx
+
 db:
 	@$(DB)
 	
