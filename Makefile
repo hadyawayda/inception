@@ -15,8 +15,6 @@ all: up
 
 # ---- run -------------------------------------------------------------------
 up:
-	@mkdir -p $(HOME)/data/mariadb
-	@mkdir -p $(HOME)/data/wordpress
 	@$(COMPOSE) up -d --build
 
 down:
