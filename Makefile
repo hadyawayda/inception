@@ -23,11 +23,19 @@ down:
 	@$(COMPOSE) down --remove-orphans
 
 mariadb:
-	@$(COMPOSE) build mariadb
+	@docker stop mariadb 2>/dev/null || true
+	@docker rm -f mariadb 2>/dev/null || true
+	@docker rmi -f mariadb 2>/dev/null || true
+	@docker builder prune -af 2>/dev/null || true
+	@$(COMPOSE) build --no-cache mariadb
 	@$(COMPOSE) up -d mariadb
 
 wordpress:
-	@$(COMPOSE) build wordpress
+	@docker stop wordpress 2>/dev/null || true
+	@docker rm -f wordpress 2>/dev/null || true
+	@docker rmi -f wordpress 2>/dev/null || true
+	@docker builder prune -af 2>/dev/null || true
+	@$(COMPOSE) build --no-cache wordpress
 	@$(COMPOSE) up -d wordpress
 
 db:
