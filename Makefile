@@ -7,7 +7,7 @@ export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
 # ---- paths ------------------------------------------------------------------
-COMPOSE			:= docker compose -f srcs/docker-compose.yml --progress=tty
+COMPOSE			:= docker compose -f srcs/docker-compose.yml
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 
 # ---- targets ---------------------------------------------------------------
