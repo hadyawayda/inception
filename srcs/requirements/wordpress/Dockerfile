@@ -3,17 +3,20 @@ FROM debian:trixie
 ENV DEBIAN_FRONTEND=noninteractive \
     WP_PATH=/var/www/html
 
-# Use bash as shell for RUN to allow '||' fallbacks safely
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Install PHP 8.4 explicitly (no guessing), plus MariaDB client
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl tar less procps bash \
-      php-cli php-mysql php-xml php-curl php-zip php-mbstring php-gd \
       mariadb-client \
-    && (apt-get install -y --no-install-recommends php-fpm \
-        || apt-get install -y --no-install-recommends php8.3-fpm \
-        || apt-get install -y --no-install-recommends php8.2-fpm) \
+      php8.4-cli php8.4-fpm php8.4-mysql php8.4-xml php8.4-curl php8.4-zip php8.4-mbstring php8.4-gd \
     && rm -rf /var/lib/apt/lists/*
+
+# Make sure "php-fpm" is always resolvable (symlink to the real binary)
+RUN set -eux; \
+    FPM="$(command -v php-fpm || command -v php-fpm8.4)"; \
+    if [ -z "$FPM" ]; then echo "php-fpm not found after install" >&2; exit 1; fi; \
+    ln -sf "$FPM" /usr/local/sbin/php-fpm
 
 # Prepare runtime dirs and tune php-fpm to listen on TCP
 RUN set -eux; \

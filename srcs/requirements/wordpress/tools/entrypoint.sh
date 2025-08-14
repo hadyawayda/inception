@@ -30,9 +30,10 @@ DB_PASS="$(read_secret "$DB_PASSWORD_FILE" "${MARIADB_PASSWORD:-}")"
 FPM_BIN=""
 for cand in \
   "$(command -v php-fpm 2>/dev/null || true)" \
+  "$(command -v php-fpm8.4 2>/dev/null || true)" \
   "$(command -v php-fpm8.3 2>/dev/null || true)" \
   "$(command -v php-fpm8.2 2>/dev/null || true)" \
-  /usr/sbin/php-fpm /usr/sbin/php-fpm8.3 /usr/sbin/php-fpm8.2; do
+  /usr/sbin/php-fpm /usr/sbin/php-fpm8.4 /usr/sbin/php-fpm8.3 /usr/sbin/php-fpm8.2; do
   if [ -n "${cand}" ] && [ -x "${cand}" ]; then FPM_BIN="${cand}"; break; fi
 done
 if [ -z "$FPM_BIN" ]; then
