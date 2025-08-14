@@ -2,41 +2,36 @@
 SHELL			:= /bin/bash
 .DEFAULT_GOAL	:= all
 
+# ---- variables -------------------------------------------------------------
 export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
-COMPOSE_FILE	:= srcs/docker-compose.yml
-ENV_FILE		:= srcs/.env.wsl
-COMPOSE			:= docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
+# ---- paths ------------------------------------------------------------------
+COMPOSE			:= docker compose -f srcs/docker-compose.yml
+DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 
-# Resolve the effective data directory from the .env.wsl file
-EFFECTIVE_DATA_DIR := $(shell bash -lc '\
-  set -a; . <(sed "s/\r$$//" srcs/.env.wsl); set +a; \
-  p="$${HOST_DATA_DIR}"; \
-  p="$$(printf "%s" "$$p" | tr -d "\r")"; \
-  eval "p=$$p"; \
-  [ -n "$$p" ] || p="$$HOME/data"; \
-  printf "%s" "$$p" \
-')
-
+# ---- targets ---------------------------------------------------------------
 all: up
 
 # ---- run -------------------------------------------------------------------
 up:
-	@mkdir -p $(EFFECTIVE_DATA_DIR)/mariadb
-	@mkdir -p $(EFFECTIVE_DATA_DIR)/wordpress
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) up -d --build
+	@mkdir -p $(HOME)/data/mariadb
+	@mkdir -p $(HOME)/data/wordpress
+	@$(COMPOSE) up -d --build
 
 down:
-	@HOST_DATA_DIR='$(EFFECTIVE_DATA_DIR)' $(COMPOSE) down --remove-orphans
+	@$(COMPOSE) down --remove-orphans
 
-update-mariadb:
+mariadb:
 	@$(COMPOSE) build mariadb
 	@$(COMPOSE) up -d mariadb
 
-update-wordpress:
+wordpress:
 	@$(COMPOSE) build wordpress
 	@$(COMPOSE) up -d wordpress
+
+db:
+	@$(DB)
 	
 # ---- cleanup --------------------------------------------------------------
 clean: down
@@ -51,4 +46,4 @@ fclean: clean
 
 re: clean all
 
-.PHONY: all build up down clean fclean re
+.PHONY: all build up down clean fclean re db
