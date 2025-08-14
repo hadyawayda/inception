@@ -1,18 +1,15 @@
-FROM debian:trixie
+FROM debian:bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive \
     WP_PATH=/var/www/html
 
-# Use bash as shell for RUN to allow '||' fallbacks safely
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl tar less procps bash \
       php-cli php-mysql php-xml php-curl php-zip php-mbstring php-gd \
+      php-fpm \
       mariadb-client \
-    && (apt-get install -y --no-install-recommends php-fpm \
-        || apt-get install -y --no-install-recommends php8.3-fpm \
-        || apt-get install -y --no-install-recommends php8.2-fpm) \
     && rm -rf /var/lib/apt/lists/*
 
 # Prepare runtime dirs and tune php-fpm to listen on TCP

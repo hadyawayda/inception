@@ -37,6 +37,10 @@ db:
 clean: down
 	@echo "Stopping all running containers..."
 	@docker stop $(docker ps -q) 2>/dev/null || true
+	@echo "Removing all stopped containers..."
+	@docker builder prune -af 2>/dev/null || true
+	@echo "Removing all containers..."
+	@docker rmi -f $(docker images -q) 2>/dev/null || true
 	@echo "Pruning unused Docker resources..."
 	@- docker system prune -af 2>/dev/null || true
 
