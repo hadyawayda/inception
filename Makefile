@@ -5,10 +5,9 @@ SHELL			:= /bin/bash
 # ---- variables -------------------------------------------------------------
 export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
-export COMPOSE_BAKE = true
 
 # ---- paths -----------------------------------------------------------------
-COMPOSE			:= docker compose -f srcs/docker-compose.yml
+COMPOSE			:= COMPOSE_BAKE=true docker compose -f srcs/docker-compose.yml
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 
 # ---- targets ---------------------------------------------------------------
