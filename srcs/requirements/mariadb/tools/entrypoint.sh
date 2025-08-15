@@ -1,16 +1,16 @@
 #!/bin/bash
 
-mariadb-install-db
+mariadb-upgrade
 chown -R mysql:mysql /var/lib/mariadb
 
-mysqld_safe --nowatch &
+mariadbd-safe &
 sleep 10
 
 ROOT_PASS="$(cat $MARIADB_ROOT_PASSWORD_FILE)"
 DB_PASS="$(cat $MARIADB_PASSWORD_FILE)"
 
 # Set root password
-mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'hawayda';"
+mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${ROOT_PASS}';"
 mysql -u root -p"${ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '${ROOT_PASS}' WITH GRANT OPTION; FLUSH PRIVILEGES;"
 
 # Create database and user for WordPress

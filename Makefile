@@ -8,7 +8,7 @@ export COMPOSE_DOCKER_CLI_BUILD = 1
 
 # ---- paths -----------------------------------------------------------------
 COMPOSE			:= docker compose -f srcs/docker-compose.yml
-DB				:= docker exec -it mariadb mysql -hlocalhost -u root -p"hawayda"
+DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 
 # ---- targets ---------------------------------------------------------------
 all: up
