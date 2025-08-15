@@ -89,6 +89,8 @@ log "Ensuring author user exists..."
 wp user get "$WP_USER" --path="$WP_PATH" --allow-root >/dev/null 2>&1 || wp user create "$WP_USER" "$WP_USER_EMAIL" --user_pass="$WP_USER_PASSWORD" --role=author --path="$WP_PATH" --allow-root
 success "Author user checked/created."
 
+wp plugin install wp-force-login --activate --path="$WP_PATH" --allow-root
+
 # Correct, safe perms
 log "Setting directory and file permissions..."
 find "$WP_PATH" -type d -exec chmod 755 {} \;

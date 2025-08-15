@@ -53,7 +53,7 @@ services:
       wordpress:
         condition: service_healthy
     ports:
-      - "443:443"
+      - "8443:443"
     volumes:
       - wp_data:/var/www/html:ro
     networks:
