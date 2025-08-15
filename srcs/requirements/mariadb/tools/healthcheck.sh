@@ -11,4 +11,4 @@ elif [ -n "$MARIADB_ROOT_PASSWORD" ]; then
 fi
 
 # Exit healthy only if MariaDB responds
-mysqladmin ping -h localhost -u root -p"$PASS"
+mysqladmin ping -u root -p"$PASS"
