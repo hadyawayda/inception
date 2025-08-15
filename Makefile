@@ -14,15 +14,13 @@ DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 all: up
 
 # ---- commands --------------------------------------------------------------
-up:
-	@mkdir -p /home/${USER}/data/mariadb
-	@mkdir -p /home/${USER}/data/wordpress
+up:	create-directories
 	@$(COMPOSE) up -d --build
 
 down:
 	@$(COMPOSE) down --remove-orphans
 
-mariadb:
+mariadb: create-directories
 	@docker stop mariadb 2>/dev/null || true
 	@docker rm -f mariadb 2>/dev/null || true
 	@docker rmi -f mariadb 2>/dev/null || true
@@ -30,7 +28,7 @@ mariadb:
 	@$(COMPOSE) build --no-cache mariadb
 	@$(COMPOSE) up -d mariadb
 
-wordpress:
+wordpress: create-directories
 	@docker stop wordpress 2>/dev/null || true
 	@docker rm -f wordpress 2>/dev/null || true
 	@docker rmi -f wordpress 2>/dev/null || true
@@ -60,9 +58,18 @@ clean: down
 	@echo "Pruning unused Docker resources..."
 	@- docker system prune -af 2>/dev/null || true
 
-fclean: clean
+fclean: clean remove-directories
 	@docker volume rm -f inception_mariadb_data || true
 	@docker volume rm -f inception_wp_data || true
+
+create-directories:
+	@mkdir -p /home/${USER}/data/mariadb
+	@mkdir -p /home/${USER}/data/wordpress
+
+remove-directories:
+	@docker rm -f wordpress mariadb 2>/dev/null || true
+	@docker run --rm -v /home/${USER}/data:/data alpine sh -c "rm -rf /data/*"
+	@rm -rf /home/${USER}/data
 
 re: clean all
 
