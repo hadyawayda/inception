@@ -1,4 +1,4 @@
-# ---- config ---------------------------------------------------------------
+# ---- config ----------------------------------------------------------------
 SHELL			:= /bin/bash
 .DEFAULT_GOAL	:= all
 
@@ -6,14 +6,14 @@ SHELL			:= /bin/bash
 export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
-# ---- paths ------------------------------------------------------------------
+# ---- paths -----------------------------------------------------------------
 COMPOSE			:= docker compose -f srcs/docker-compose.yml
-DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
+DB				:= docker exec -it mariadb mysql -hlocalhost -u root -p"hawayda"
 
 # ---- targets ---------------------------------------------------------------
 all: up
 
-# ---- run -------------------------------------------------------------------
+# ---- commands --------------------------------------------------------------
 up:
 	@mkdir -p /home/${USER}/data/mariadb
 	@mkdir -p /home/${USER}/data/wordpress
@@ -48,8 +48,8 @@ nginx:
 
 db:
 	@$(DB)
-	
-# ---- cleanup --------------------------------------------------------------
+
+# ---- cleanup commands ------------------------------------------------------
 clean: down
 	@echo "Stopping all running containers..."
 	@docker stop $(docker ps -q) 2>/dev/null || true
