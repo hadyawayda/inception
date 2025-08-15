@@ -63,9 +63,6 @@ else
     warn "WordPress core already present, skipping download."
 fi
 
-log "Waiting 20 seconds to ensure DB is ready..."
-sleep 20
-
 # Only create wp-config.php if it doesn't exist
 if [ ! -f "$WP_PATH/wp-config.php" ]; then
     log "Creating wp-config.php..."
