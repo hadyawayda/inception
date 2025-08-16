@@ -9,11 +9,10 @@ export COMPOSE_DOCKER_CLI_BUILD = 1
 # ---- paths -----------------------------------------------------------------
 COMPOSE			:= docker compose -f srcs/docker-compose.yml
 COMPOSE_AWS		:= docker compose -f srcs/docker-compose.aws.yml
+COMPOSE_LOCAL	:= docker compose -f srcs/docker-compose.local.yml
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 UPDATE_SITEURL	:= docker exec -it wordpress wp option update siteurl "https://localhost:8443" --allow-root --path=/var/www/html
 UPDATE_HOME		:= docker exec -it wordpress wp option update home "https://localhost:8443" --allow-root --path=/var/www/html
-AWS_SITEURL		:= docker exec -it wordpress wp option update siteurl "https://3.71.10.151" --allow-root --path=/var/www/html
-AWS_HOME		:= docker exec -it wordpress wp option update home "https://3.71.10.151" --allow-root --path=/var/www/html
 RESTORED_URL	:= docker exec -it wordpress wp option update siteurl "https://localhost" --allow-root --path=/var/www/html
 RESTORED_HOME	:= docker exec -it wordpress wp option update home "https://localhost " --allow-root --path=/var/www/html
 
@@ -78,20 +77,8 @@ remove-directories:
 	@docker run --rm -v /home/${USER}/data:/data alpine sh -c "rm -rf /data/*"
 	@rm -rf /home/${USER}/data
 
-local:
-	@$(UPDATE_SITEURL)
-	@$(UPDATE_HOME)
-	@echo "Local environment updated."
-
-restore:
-	@$(RESTORED_URL)
-	@$(RESTORED_HOME)
-	@echo "Restored environment updated."
-
-aws:
-	@$(AWS_HOME)
-	@$(AWS_SITEURL)
-	@echo "AWS environment updated."
+local: create-directories
+	@$(COMPOSE_LOCAL) up -d --build
 
 ec2: create-directories
 	@$(COMPOSE_AWS) up -d --build

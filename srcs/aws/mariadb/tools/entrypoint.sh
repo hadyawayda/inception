@@ -8,11 +8,11 @@ sleep 10
 
 # === Fetch secrets from AWS Secrets Manager ===
 ROOT_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id "$DB_ROOT_SECRET_ID" \
+    --secret-id inception/db_root_password \
     --query SecretString --output text)
 
 DB_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id "$DB_PASSWORD_SECRET_ID" \
+    --secret-id inception/db_password \
     --query SecretString --output text)
 
 # Set root password
