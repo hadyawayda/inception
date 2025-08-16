@@ -11,7 +11,7 @@ RUN mkdir -p /etc/nginx/ssl && \
     openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
       -keyout /etc/nginx/ssl/server.key \
       -out /etc/nginx/ssl/server.crt \
-      -subj "/CN=localhost"
+      -subj "/CN=${DOMAIN_NAME}"
 
 # Your site config must point to wordpress:9000 via fastcgi_pass
 COPY conf/site.conf /etc/nginx/conf.d/site.conf

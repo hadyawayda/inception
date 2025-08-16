@@ -6,15 +6,19 @@ SHELL			:= /bin/bash
 export DOCKER_BUILDKIT = 1
 export COMPOSE_DOCKER_CLI_BUILD = 1
 
-# ---- paths -----------------------------------------------------------------
+# ---- compose ---------------------------------------------------------------
 COMPOSE			:= docker compose -f srcs/docker-compose.yml
 COMPOSE_AWS		:= docker compose -f srcs/docker-compose.aws.yml
 COMPOSE_LOCAL	:= docker compose -f srcs/docker-compose.local.yml
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
+
+# ---- helpers ---------------------------------------------------------------
 UPDATE_SITEURL	:= docker exec -it wordpress wp option update siteurl "https://localhost:8443" --allow-root --path=/var/www/html
 UPDATE_HOME		:= docker exec -it wordpress wp option update home "https://localhost:8443" --allow-root --path=/var/www/html
 RESTORED_URL	:= docker exec -it wordpress wp option update siteurl "https://localhost" --allow-root --path=/var/www/html
 RESTORED_HOME	:= docker exec -it wordpress wp option update home "https://localhost " --allow-root --path=/var/www/html
+GET_SITEURL		:= docker exec -it wordpress wp option get siteurl --allow-root --path=/var/www/html
+GET_HOME		:= docker exec -it wordpress wp option get home --allow-root --path=/var/www/html
 
 # ---- targets ---------------------------------------------------------------
 all: up
@@ -82,6 +86,14 @@ local: create-directories
 
 ec2: create-directories
 	@$(COMPOSE_AWS) up -d --build
+
+info:
+	@$(GET_SITEURL)
+	@$(GET_HOME)
+
+set-local:
+	@$(UPDATE_SITEURL)
+	@$(UPDATE_HOME)
 
 re: clean all
 

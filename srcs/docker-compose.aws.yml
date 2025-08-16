@@ -8,9 +8,6 @@ services:
     container_name: mariadb
     restart: on-failure
     env_file: ./aws/mariadb/.env
-    secrets:
-      - db_root_password
-      - db_password
     volumes:
       - mariadb_data:/var/lib/mariadb
     networks:
@@ -29,10 +26,6 @@ services:
     container_name: wordpress
     restart: on-failure
     env_file: ./aws/wordpress/.env
-    secrets:
-      - db_password
-      - wp_admin_password
-      - wp_user_password
     depends_on:
       mariadb:
         condition: service_healthy
@@ -69,16 +62,6 @@ services:
       timeout: 3s
       retries: 10
       start_period: 1s
-
-secrets:
-  db_root_password:
-    external: true
-  db_password:
-    external: true
-  wp_admin_password:
-    external: true
-  wp_user_password:
-    external: true
 
 volumes:
   mariadb_data:
