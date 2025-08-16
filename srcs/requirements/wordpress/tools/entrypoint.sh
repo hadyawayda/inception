@@ -50,6 +50,22 @@ else
   log "Using DB password from environment variable."
 fi
 
+# ===== Wait for MariaDB ======================================================
+log "Waiting for MariaDB at $MARIADB_HOST..."
+
+MAX_TRIES=30
+TRIES=0
+until mysqladmin ping -h"$MARIADB_HOST" -u"$MARIADB_USER" -p"$DB_PASS" --silent >/dev/null 2>&1; do
+  TRIES=$((TRIES+1))
+  if [ "$TRIES" -ge "$MAX_TRIES" ]; then
+    error "MariaDB not ready after $MAX_TRIES attempts. Exiting."
+    exit 1
+  fi
+  warn "MariaDB not ready yet... retrying ($TRIES/$MAX_TRIES)"
+  sleep 2
+done
+success "MariaDB is up and reachable."
+
 # ===== Prep ==================================================================
 log "Ensuring correct ownership of $WP_PATH..."
 chown -R www-data:www-data "$WP_PATH"
