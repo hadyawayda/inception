@@ -19,6 +19,7 @@ error()   { echo -e "${RED}[ERROR]${RESET} $1" ; }
 log "Checking required environment variables..."
 req() { : "${!1:?Environment variable $1 is required}"; }
 req WP_PATH
+req DB_HOST
 req MARIADB_DATABASE
 req MARIADB_USER
 req DOMAIN_NAME
@@ -40,10 +41,11 @@ ADMIN_PASS=$(echo "$SECRET_JSON" | jq -r .wp_admin_password)
 USER_PASS=$(echo "$SECRET_JSON" | jq -r .wp_user_password)
 
 # ===== Wait for MariaDB ======================================================
+log "Waiting for MariaDB at $DB_HOST..."
 
 MAX_TRIES=30
 TRIES=0
-until mysqladmin ping -h"mariadb" -u"$MARIADB_USER" -p"$DB_PASS" --silent >/dev/null 2>&1; do
+until mysqladmin ping -h"$DB_HOST" -u"$MARIADB_USER" -p"$DB_PASS" --silent >/dev/null 2>&1; do
   TRIES=$((TRIES+1))
   if [ "$TRIES" -ge "$MAX_TRIES" ]; then
     error "MariaDB not ready after $MAX_TRIES attempts. Exiting."
@@ -70,7 +72,7 @@ fi
 # Only create wp-config.php if it doesn't exist
 if [ ! -f "$WP_PATH/wp-config.php" ]; then
     log "Creating wp-config.php..."
-    wp config create --path="$WP_PATH" --dbname="$MARIADB_DATABASE" --dbuser="$MARIADB_USER" --dbpass="$DB_PASS" --dbhost="mariadb" --skip-check --allow-root
+    wp config create --path="$WP_PATH" --dbname="$MARIADB_DATABASE" --dbuser="$MARIADB_USER" --dbpass="$DB_PASS" --dbhost="$DB_HOST" --skip-check --allow-root
     wp config shuffle-salts --path="$WP_PATH" --allow-root
     wp config set FS_METHOD direct --path="$WP_PATH" --allow-root
     wp config set FORCE_SSL_ADMIN true --raw --path="$WP_PATH" --allow-root
