@@ -8,6 +8,7 @@ export COMPOSE_DOCKER_CLI_BUILD = 1
 
 # ---- paths -----------------------------------------------------------------
 COMPOSE			:= docker compose -f srcs/docker-compose.yml
+COMPOSE_AWS		:= docker compose -f srcs/docker-compose.aws.yml
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 UPDATE_SITEURL	:= docker exec -it wordpress wp option update siteurl "https://localhost:8443" --allow-root --path=/var/www/html
 UPDATE_HOME		:= docker exec -it wordpress wp option update home "https://localhost:8443" --allow-root --path=/var/www/html
@@ -88,9 +89,12 @@ restore:
 	@echo "Restored environment updated."
 
 aws:
-	@$(AWS_SITEURL)
 	@$(AWS_HOME)
+	@$(AWS_SITEURL)
 	@echo "AWS environment updated."
+
+ec2: create-directories
+	@$(COMPOSE_AWS) up -d --build
 
 re: clean all
 
