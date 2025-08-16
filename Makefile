@@ -84,6 +84,8 @@ remove-directories:
 
 local: create-directories
 	@$(COMPOSE_LOCAL) up -d --build
+	@$(UPDATE_SITEURL)
+	@$(UPDATE_HOME)
 
 ec2: create-directories
 	@$(COMPOSE_AWS) up -d --build
