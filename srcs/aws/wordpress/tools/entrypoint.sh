@@ -30,23 +30,21 @@ req WP_USER
 req WP_USER_EMAIL
 success "All required environment variables are set."
 
-# DB password must come from file OR env (no default)
-if [ -n "${MARIADB_PASSWORD_FILE:-}" ] && [ -f "$MARIADB_PASSWORD_FILE" ]; then
-  log "Reading DB password from file: $MARIADB_PASSWORD_FILE"
-  DB_PASS="$(cat "$MARIADB_PASSWORD_FILE")"
-fi
+# Fetch secrets from AWS Secrets Manager
+DB_PASS=$(aws secretsmanager get-secret-value \
+    --secret-id inception/db_password \
+    --query SecretString \
+    --output text)
 
-# Admin password
-if [ -n "${WP_ADMIN_PASSWORD_FILE:-}" ] && [ -f "$WP_ADMIN_PASSWORD_FILE" ]; then
-  log "Reading WP admin password from file: $WP_ADMIN_PASSWORD_FILE"
-  ADMIN_PASS="$(cat "$WP_ADMIN_PASSWORD_FILE")"
-fi
+ADMIN_PASS=$(aws secretsmanager get-secret-value \
+    --secret-id inception/wp_admin_password \
+    --query SecretString \
+    --output text)
 
-# Regular user password
-if [ -n "${WP_USER_PASSWORD_FILE:-}" ] && [ -f "$WP_USER_PASSWORD_FILE" ]; then
-  log "Reading WP user password from file: $WP_USER_PASSWORD_FILE"
-  USER_PASS="$(cat "$WP_USER_PASSWORD_FILE")"
-fi
+USER_PASS=$(aws secretsmanager get-secret-value \
+    --secret-id inception/wp_user_password \
+    --query SecretString \
+    --output text)
 
 # ===== Wait for MariaDB ======================================================
 log "Waiting for MariaDB at $MARIADB_HOST..."

@@ -1,0 +1,10 @@
+[mysqld]
+# Configure server as per your requirements
+socket  = /run/mysqld/mysqld.sock
+bind-address = 0.0.0.0
+user = mysql
+skip-host-cache
+sql_mode = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+
+# Other basic settings (if necessary)
+innodb_buffer_pool_size = 128M
