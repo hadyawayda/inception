@@ -4,7 +4,7 @@ services:
   mariadb:
     image: mariadb
     build: 
-      context: ./requirements/mariadb
+      context: ./local/mariadb
     container_name: mariadb
     restart: on-failure
     env_file: ./.env.local
@@ -25,7 +25,7 @@ services:
   wordpress:
     image: wordpress
     build:
-      context: ./requirements/wordpress
+      context: ./local/wordpress
     container_name: wordpress
     restart: on-failure
     env_file: ./.env.local
@@ -50,7 +50,7 @@ services:
   nginx:
     image: nginx
     build:
-      context: ./requirements/nginx
+      context: ./local/nginx
     container_name: nginx
     env_file: ./.env.local
     restart: on-failure
