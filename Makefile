@@ -71,6 +71,7 @@ clean: down
 fclean: clean remove-directories
 	@docker volume rm -f inception_mariadb_data || true
 	@docker volume rm -f inception_wp_data || true
+	@- docker system prune -af 2>/dev/null || true
 
 create-directories:
 	@mkdir -p /home/${USER}/data/mariadb
