@@ -7,7 +7,7 @@ services:
       context: ./requirements/mariadb
     container_name: mariadb
     restart: on-failure
-    env_file: ./requirements/.env
+    env_file: ./.env.local
     secrets:
       - db_root_password
       - db_password
@@ -28,7 +28,7 @@ services:
       context: ./requirements/wordpress
     container_name: wordpress
     restart: on-failure
-    env_file: ./requirements/.env
+    env_file: ./.env.local
     secrets:
       - db_password
       - wp_admin_password
@@ -52,7 +52,7 @@ services:
     build:
       context: ./requirements/nginx
     container_name: nginx
-    env_file: ./requirements/.env
+    env_file: ./.env.local
     restart: on-failure
     depends_on:
       wordpress:
