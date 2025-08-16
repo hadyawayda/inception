@@ -7,7 +7,7 @@ services:
       context: ./aws/mariadb
     container_name: mariadb
     restart: on-failure
-    env_file: ./aws/mariadb/.env
+    env_file: ./aws/.env
     volumes:
       - mariadb_data:/var/lib/mariadb
     networks:
@@ -25,7 +25,7 @@ services:
       context: ./aws/wordpress
     container_name: wordpress
     restart: on-failure
-    env_file: ./aws/wordpress/.env
+    env_file: ./aws/.env
     depends_on:
       mariadb:
         condition: service_healthy
@@ -45,7 +45,7 @@ services:
     build:
       context: ./aws/nginx
     container_name: nginx
-    env_file: ./aws/nginx/.env
+    env_file: ./aws/.env
     restart: on-failure
     depends_on:
       wordpress:
