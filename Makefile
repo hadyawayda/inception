@@ -13,6 +13,10 @@ COMPOSE_LOCAL	:= docker compose -f srcs/docker-compose.local.yml
 DB				:= docker exec -it mariadb mysql -u root -p"hawayda"
 
 # ---- helpers ---------------------------------------------------------------
+UPDATE_SITEURL	:= docker exec -it wordpress wp option update siteurl "https://localhost:8443" --allow-root --path=/var/www/html
+UPDATE_HOME		:= docker exec -it wordpress wp option update home "https://localhost:8443" --allow-root --path=/var/www/html
+RESTORED_URL	:= docker exec -it wordpress wp option update siteurl "https://localhost" --allow-root --path=/var/www/html
+RESTORED_HOME	:= docker exec -it wordpress wp option update home "https://localhost " --allow-root --path=/var/www/html
 GET_SITEURL		:= docker exec -it wordpress wp option get siteurl --allow-root --path=/var/www/html
 GET_HOME		:= docker exec -it wordpress wp option get home --allow-root --path=/var/www/html
 
@@ -80,6 +84,8 @@ remove-directories:
 
 local: create-directories
 	@$(COMPOSE_LOCAL) up -d --build
+	@$(UPDATE_SITEURL)
+	@$(UPDATE_HOME)
 
 ec2: create-directories
 	@$(COMPOSE_AWS) up -d --build
@@ -87,6 +93,10 @@ ec2: create-directories
 info:
 	@$(GET_SITEURL)
 	@$(GET_HOME)
+
+set-local:
+	@$(UPDATE_SITEURL)
+	@$(UPDATE_HOME)
 
 re: clean all
 
