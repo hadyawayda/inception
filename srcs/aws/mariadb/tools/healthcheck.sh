@@ -2,7 +2,7 @@
 set -e
 
 ROOT_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id "$DB_ROOT_SECRET_ID" \
+    --secret-id inception/db_root_password \
     --query SecretString --output text)
 
 # Exit healthy only if MariaDB responds
