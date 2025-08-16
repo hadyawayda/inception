@@ -15,6 +15,9 @@ RUN mkdir -p /etc/nginx/ssl && \
 
 # Your site config must point to wordpress:9000 via fastcgi_pass
 COPY conf/site.conf /etc/nginx/conf.d/site.conf
+COPY tools/healthcheck.sh /usr/local/bin/healthcheck.sh
+
+RUN chmod +x /usr/local/bin/healthcheck.sh
 
 EXPOSE 443
 

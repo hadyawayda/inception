@@ -62,7 +62,7 @@ services:
     networks:
       - inception
     healthcheck:
-      test: ["CMD-SHELL", "curl -kfsS -H 'Host: ${DOMAIN_NAME:-login.42.fr}' https://127.0.0.1/ || exit 1"]
+      test: ["CMD", "bash", "/usr/local/bin/healthcheck.sh"]
       interval: 10s
       timeout: 3s
       retries: 5
