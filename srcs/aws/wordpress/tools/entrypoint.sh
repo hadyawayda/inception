@@ -30,21 +30,15 @@ req WP_USER
 req WP_USER_EMAIL
 success "All required environment variables are set."
 
-# Fetch secrets from AWS Secrets Manager
-DB_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id inception/db_password \
+# Fetch all secrets from AWS Secrets Manager
+SECRET_JSON=$(aws secretsmanager get-secret-value \
+    --secret-id Inception \
     --query SecretString \
     --output text)
 
-ADMIN_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id inception/wp_admin_password \
-    --query SecretString \
-    --output text)
-
-USER_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id inception/wp_user_password \
-    --query SecretString \
-    --output text)
+DB_PASS=$(echo "$SECRET_JSON" | jq -r .db_password)
+ADMIN_PASS=$(echo "$SECRET_JSON" | jq -r .wp_admin_password)
+USER_PASS=$(echo "$SECRET_JSON" | jq -r .wp_user_password)
 
 # ===== Wait for MariaDB ======================================================
 log "Waiting for MariaDB at $MARIADB_HOST..."

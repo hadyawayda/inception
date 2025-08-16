@@ -6,14 +6,14 @@ chown -R mysql:mysql /var/lib/mariadb
 mariadbd-safe &
 sleep 10
 
-# === Fetch secrets from AWS Secrets Manager ===
-ROOT_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id inception/db_root_password \
-    --query SecretString --output text)
+# Fetch all secrets from AWS Secrets Manager
+SECRET_JSON=$(aws secretsmanager get-secret-value \
+    --secret-id Inception \
+    --query SecretString \
+    --output text)
 
-DB_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id inception/db_password \
-    --query SecretString --output text)
+ROOT_PASS=$(echo "$SECRET_JSON" | jq -r .db_root_password)
+DB_PASS=$(echo "$SECRET_JSON" | jq -r .db_password)
 
 # Set root password
 mysql -u "$MARIAD_ROOT_USER" -e "ALTER USER '${MARIAD_ROOT_USER}'@'localhost' IDENTIFIED BY '${ROOT_PASS}';"

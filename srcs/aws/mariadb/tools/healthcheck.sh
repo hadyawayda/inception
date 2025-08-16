@@ -1,9 +1,13 @@
 #!/bin/bash
 set -e
 
-ROOT_PASS=$(aws secretsmanager get-secret-value \
-    --secret-id inception/db_root_password \
-    --query SecretString --output text)
+# Fetch all secrets from AWS Secrets Manager
+SECRET_JSON=$(aws secretsmanager get-secret-value \
+    --secret-id Inception \
+    --query SecretString \
+    --output text)
+
+ROOT_PASS=$(echo "$SECRET_JSON" | jq -r .db_root_password)
 
 # Exit healthy only if MariaDB responds
 mysqladmin ping -u root -p"$ROOT_PASS"
