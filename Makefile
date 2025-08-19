@@ -74,13 +74,13 @@ fclean: clean remove-directories
 	@- docker system prune -af 2>/dev/null || true
 
 create-directories:
-	@mkdir -p /home/${USER}/data/mariadb
-	@mkdir -p /home/${USER}/data/wordpress
+	@sudo mkdir -p /home/hawayda/data/mariadb
+	@sudo mkdir -p /home/hawayda/data/wordpress
 
 remove-directories:
 	@docker rm -f wordpress mariadb 2>/dev/null || true
-	@docker run --rm -v /home/${USER}/data:/data alpine sh -c "rm -rf /data/*"
-	@rm -rf /home/${USER}/data
+	@docker run --rm -v /home/hawayda/data:/data alpine sh -c "rm -rf /data/*"
+	@rm -rf /home/hawayda/data
 
 local: create-directories
 	@$(COMPOSE_LOCAL) up -d --build

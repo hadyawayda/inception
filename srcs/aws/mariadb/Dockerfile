@@ -1,5 +1,5 @@
-# Use the Debian Trixie base image
-FROM debian:trixie
+# Use the Debian Bookworm base image
+FROM debian:bookworm
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive \

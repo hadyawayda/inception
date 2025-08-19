@@ -1,4 +1,5 @@
-FROM debian:trixie
+# Use the Debian Bookworm base image
+FROM debian:bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
