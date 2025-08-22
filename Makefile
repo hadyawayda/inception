@@ -87,7 +87,7 @@ local:
 	@$(UPDATE_SITEURL)
 	@$(UPDATE_HOME)
 
-ec2:
+aws:
 	@$(COMPOSE_AWS) up -d --build
 
 info:
