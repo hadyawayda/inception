@@ -74,8 +74,8 @@ fclean: clean remove-directories
 	@- docker system prune -af 2>/dev/null || true
 
 create-directories:
-	@sudo mkdir -p /home/hawayda/data/mariadb
-	@sudo mkdir -p /home/hawayda/data/wordpress
+	@mkdir -p /home/hawayda/data/mariadb
+	@mkdir -p /home/hawayda/data/wordpress
 
 remove-directories:
 	@docker rm -f wordpress mariadb 2>/dev/null || true
