@@ -24,13 +24,13 @@ GET_HOME		:= docker exec -it wordpress wp option get home --allow-root --path=/v
 all: up
 
 # ---- commands --------------------------------------------------------------
-up:	create-directories
+up:
 	@$(COMPOSE) up -d --build
 
 down:
 	@$(COMPOSE) down --remove-orphans
 
-mariadb: create-directories
+mariadb:
 	@docker stop mariadb 2>/dev/null || true
 	@docker rm -f mariadb 2>/dev/null || true
 	@docker rmi -f mariadb 2>/dev/null || true
@@ -38,7 +38,7 @@ mariadb: create-directories
 	@$(COMPOSE) build --no-cache mariadb
 	@$(COMPOSE) up -d mariadb
 
-wordpress: create-directories
+wordpress:
 	@docker stop wordpress 2>/dev/null || true
 	@docker rm -f wordpress 2>/dev/null || true
 	@docker rmi -f wordpress 2>/dev/null || true
@@ -68,7 +68,7 @@ clean: down
 	@echo "Pruning unused Docker resources..."
 	@- docker system prune -af 2>/dev/null || true
 
-fclean: clean remove-directories
+fclean: clean
 	@docker volume rm -f inception_mariadb_data || true
 	@docker volume rm -f inception_wp_data || true
 	@- docker system prune -af 2>/dev/null || true
@@ -82,12 +82,12 @@ remove-directories:
 	@docker run --rm -v /home/hawayda/data:/data alpine sh -c "rm -rf /data/*"
 	@rm -rf /home/hawayda/data
 
-local: create-directories
+local:
 	@$(COMPOSE_LOCAL) up -d --build
 	@$(UPDATE_SITEURL)
 	@$(UPDATE_HOME)
 
-ec2: create-directories
+ec2:
 	@$(COMPOSE_AWS) up -d --build
 
 info:
