@@ -28,7 +28,7 @@ services:
     depends_on:
       - mariadb
     volumes:
-      - wp_files:/var/www/wordpress
+      - wp_files:/var/www/html
     networks:
       - inception
 
@@ -43,9 +43,9 @@ services:
     depends_on:
       - wordpress
     ports:
-      - "443:443"
+      - "8443:443"
     volumes:
-      - wp_files:/var/www/wordpress:ro
+      - wp_files:/var/www/html:ro
     networks:
       - inception
 

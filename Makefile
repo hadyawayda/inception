@@ -14,6 +14,9 @@ down:
 clean:
 	$(COMPOSE) -f $(COMPOSE_FILE) down -v
 
+ps:
+	@$(COMPOSE) -f $(COMPOSE_FILE) ps
+
 re: clean up
 
 .PHONY: all up down clean re
