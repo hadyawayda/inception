@@ -1,32 +1,18 @@
-# Use the Debian Bookworm base image
-FROM debian:bookworm
+FROM alpine:3.19
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apk update && apk add --no-cache \
+    mariadb mariadb-client \
+    tzdata
 
-# Install MariaDB and necessary utilities
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        mariadb-server mariadb-client tini ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# Create run & data dirs
+RUN mkdir -p /run/mysqld /var/lib/mysql && \
+    chown -R mysql:mysql /run/mysqld /var/lib/mysql
 
-# Copy MariaDB config, entrypoint script, and healthcheck script
-COPY conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
-COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY tools/healthcheck.sh /usr/local/bin/healthcheck.sh
+COPY conf/my.cnf /etc/my.cnf
+COPY tools/init-db.sh /usr/local/bin/init-db.sh
 
-# Make sure scripts and configs have correct permissions
-RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    chmod +x /usr/local/bin/healthcheck.sh && \
-    mkdir -p /var/lib/mariadb /run/mysqld && \
-    chown -R mysql:mysql /var/lib/mariadb /run/mysqld && \
-    chmod 0644 /etc/mysql/mariadb.conf.d/50-server.cnf && \
-    chown root:root /etc/mysql/mariadb.conf.d/50-server.cnf
+RUN chmod +x /usr/local/bin/init-db.sh
 
-# Expose MariaDB default port
-EXPOSE 3306
-
-# Use tini to handle PID 1 and run the entrypoint script
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
-
-CMD ["mysqld"]
+# Use exec-form CMD so mysqld is PID 1 (good Docker practice) :contentReference[oaicite:7]{index=7}
+ENTRYPOINT ["/usr/local/bin/init-db.sh"]
+CMD ["mysqld", "--user=mysql", "--console"]

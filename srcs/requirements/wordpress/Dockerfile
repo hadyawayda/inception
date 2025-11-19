@@ -1,37 +1,27 @@
-# Use the Debian Bookworm base image
-FROM debian:bookworm
+FROM alpine:3.19
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    WP_PATH=/var/www/html \
-    WP_CLI_ALLOW_ROOT=1
+RUN apk update && apk add --no-cache \
+    php81 php81-fpm php81-mysqli php81-json php81-session \
+    php81-gd php81-curl php81-xml php81-mbstring \
+    php81-zip php81-opcache \
+    curl tar \
+    tzdata
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates curl tar less procps unzip \
-      mariadb-client \
-      php8.2-cli php8.2-fpm php8.2-mysql php8.2-xml php8.2-curl php8.2-zip php8.2-mbstring php8.2-gd \
-    && rm -rf /var/lib/apt/lists/*
+# Configure PHP-FPM to listen on 0.0.0.0:9000
+RUN sed -i 's|^listen = .*|listen = 0.0.0.0:9000|' /etc/php81/php-fpm.d/www.conf && \
+    sed -i 's|;clear_env = no|clear_env = no|' /etc/php81/php-fpm.d/www.conf
 
-# Install WP-CLI
-RUN curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-      -o /usr/local/bin/wp \
- && chmod +x /usr/local/bin/wp \
- && wp --info --allow-root
+WORKDIR /var/www
 
-# Provide an unversioned php-fpm alias so CMD ["php-fpm","-F"] works
-RUN set -eux; ln -sf "$(command -v php-fpm8.2)" /usr/local/sbin/php-fpm
+# Download WordPress
+RUN curl -o wordpress.tar.gz https://wordpress.org/latest.tar.gz && \
+    tar -xzf wordpress.tar.gz && rm wordpress.tar.gz && \
+    chown -R nobody:nobody wordpress
 
-# Make sure the WP dir exists and is owned (plugins/themes need this)
-RUN mkdir -p "${WP_PATH}/wp-content/mu-plugins" && chown -R www-data:www-data "${WP_PATH}"
+COPY tools/init.sh /usr/local/bin/init.sh
+RUN chmod +x /usr/local/bin/init.sh
 
-# Entrypoint + healthcheck
-COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY tools/healthcheck.sh /usr/local/bin/healthcheck.sh
-COPY conf/zz-docker.conf /etc/php/8.2/fpm/pool.d/zz-docker.conf
+USER nobody
 
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh
-
-WORKDIR ${WP_PATH}
-EXPOSE 9000
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["php-fpm","-F"]
+ENTRYPOINT ["/usr/local/bin/init.sh"]
+CMD ["php-fpm81", "-F"]

@@ -1,26 +1,17 @@
-# Use the Debian Bookworm base image
-FROM debian:bookworm
+FROM alpine:3.19
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apk update && apk add --no-cache \
+    nginx openssl \
+    tzdata
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      nginx openssl ca-certificates curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /run/nginx /etc/nginx/ssl /var/www && \
+    chown -R nginx:nginx /run/nginx /var/www
 
-# Self-signed cert for local testing
-RUN mkdir -p /etc/nginx/ssl && \
-    openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-      -keyout /etc/nginx/ssl/server.key \
-      -out /etc/nginx/ssl/server.crt \
-      -subj "/CN=${DOMAIN_NAME}"
+COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY tools/init.sh /usr/local/bin/init.sh
+RUN chmod +x /usr/local/bin/init.sh
 
-# Your site config must point to wordpress:9000 via fastcgi_pass
-COPY conf/site.conf /etc/nginx/conf.d/site.conf
-COPY tools/healthcheck.sh /usr/local/bin/healthcheck.sh
+WORKDIR /var/www
 
-RUN chmod +x /usr/local/bin/healthcheck.sh
-
-EXPOSE 443
-
-STOPSIGNAL SIGTERM
-CMD ["nginx","-g","daemon off;"]
+ENTRYPOINT ["/usr/local/bin/init.sh"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,99 +1,74 @@
-name: inception
-
 services:
   mariadb:
-    image: mariadb
-    build: 
-      context: ./requirements/mariadb
     container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+    image: mariadb
     restart: on-failure
-    env_file: ./.env.local
+    env_file:
+      - .env
     secrets:
       - db_root_password
       - db_password
     volumes:
-      - mariadb_data:/var/lib/mariadb
+      - wp_db:/var/lib/mysql
     networks:
       - inception
-    healthcheck:
-      test: ["CMD", "bash", "/usr/local/bin/healthcheck.sh"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 20s
 
   wordpress:
-    image: wordpress
+    container_name: wordpress
     build:
       context: ./requirements/wordpress
-    container_name: wordpress
+    image: wordpress
     restart: on-failure
-    env_file: ./.env.local
+    env_file:
+      - .env
     secrets:
       - db_password
-      - wp_admin_password
-      - wp_user_password
     depends_on:
-      mariadb:
-        condition: service_healthy
+      - mariadb
     volumes:
-      - wp_data:/var/www/html
-    networks: 
+      - wp_files:/var/www/wordpress
+    networks:
       - inception
-    healthcheck:
-      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-      
+
   nginx:
-    image: nginx
+    container_name: nginx
     build:
       context: ./requirements/nginx
-    container_name: nginx
-    env_file: ./.env.local
+    image: nginx
     restart: on-failure
+    env_file:
+      - .env
     depends_on:
-      wordpress:
-        condition: service_healthy
+      - wordpress
     ports:
       - "443:443"
     volumes:
-      - wp_data:/var/www/html:ro
+      - wp_files:/var/www/wordpress:ro
     networks:
       - inception
-    healthcheck:
-      test: ["CMD", "bash", "/usr/local/bin/healthcheck.sh"]
-      interval: 3s
-      timeout: 3s
-      retries: 10
-      start_period: 1s
+
+networks:
+  inception:
+    driver: bridge
+
+volumes:
+  wp_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/nabbas/data/mariadb
+  wp_files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/nabbas/data/wordpress
 
 secrets:
   db_root_password:
     file: ../secrets/db_root_password.txt
   db_password:
     file: ../secrets/db_password.txt
-  wp_admin_password:
-    file: ../secrets/wp_admin_password.txt
-  wp_user_password:
-    file: ../secrets/wp_user_password.txt
-
-volumes:
-  mariadb_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/hawayda/data/mariadb
-  wp_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/hawayda/data/wordpress
-
-networks:
-  inception:
-    driver: bridge
