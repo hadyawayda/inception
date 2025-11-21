@@ -63,8 +63,32 @@ if ! wp core is-installed --path=/var/www/html --allow-root 2>/dev/null; then
       --skip-email \
       --allow-root
     echo "[SUCCESS] WordPress installed."
+    
+    # Create second user (non-admin)
+    if [ -n "${WP_USER_NAME:-}" ]; then
+        echo "[WP-ENTRYPOINT] Creating second WordPress user..."
+        wp user create "${WP_USER_NAME}" "${WP_USER_EMAIL}" \
+          --role=author \
+          --user_pass="${WP_USER_PASSWORD}" \
+          --path=/var/www/html \
+          --allow-root
+        echo "[SUCCESS] Second user created."
+    fi
 else
     echo "[WARNING] WordPress already installed, skipping install."
+    
+    # Create second user if it doesn't exist
+    if [ -n "${WP_USER_NAME:-}" ]; then
+        if ! wp user get "${WP_USER_NAME}" --path=/var/www/html --allow-root 2>/dev/null; then
+            echo "[WP-ENTRYPOINT] Creating second WordPress user..."
+            wp user create "${WP_USER_NAME}" "${WP_USER_EMAIL}" \
+              --role=author \
+              --user_pass="${WP_USER_PASSWORD}" \
+              --path=/var/www/html \
+              --allow-root
+            echo "[SUCCESS] Second user created."
+        fi
+    fi
 fi
 
 # Update site URLs to match current domain
