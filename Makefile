@@ -14,6 +14,10 @@ down:
 clean:
 	$(COMPOSE) -f $(COMPOSE_FILE) down -v
 
+fclean: down clean
+	@docker system prune --volumes -af
+	@docker volume prune -af
+
 ps:
 	@$(COMPOSE) -f $(COMPOSE_FILE) ps
 
